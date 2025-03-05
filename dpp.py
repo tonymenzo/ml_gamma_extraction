@@ -29,7 +29,7 @@ class DPP(nn.Module, TargetDistribution):
 		# Load the data
 		self.mp_thetap = np.load(self.data)
 		# bin the data to approximate the density
-		n_bins = 150
+		n_bins = 300
 		H, xedges, yedges = np.histogram2d(self.mp_thetap[:,0], self.mp_thetap[:,1], n_bins, density = True, range = [[0., 1.], [0.,1.]])
 		xedges_center = (xedges[:-1] + xedges[1:]) / 2
 		yedges_center = (yedges[:-1] + yedges[1:]) / 2
@@ -60,7 +60,7 @@ class DPP(nn.Module, TargetDistribution):
 	def test_set(self) -> torch.Tensor:
 		return self.sample((self.n_test_set_samples, ))
 
-	def log_prob2(self, x: torch.Tensor):
+	def log_prob(self, x: torch.Tensor):
 		log_prob = torch.from_numpy(np.log(self.density(x)))
 		log_prob = log_prob.float().requires_grad_(requires_grad=True)
 		
@@ -74,21 +74,21 @@ class DPP(nn.Module, TargetDistribution):
 		return log_prob
 	
 	
-	def log_prob(self, x: torch.Tensor):
-		# Ensure input tensor is moved to CPU and detached from the computation graph
-		x_cpu = x.detach().cpu().numpy()
+	# def log_prob(self, x: torch.Tensor):
+	# 	# Ensure input tensor is moved to CPU and detached from the computation graph
+	# 	x_cpu = x.detach().cpu().numpy()
 		
-		# Compute log density using NumPy
-		log_density = np.log(self.density(x_cpu))
+	# 	# Compute log density using NumPy
+	# 	log_density = np.log(self.density(x_cpu))
 
-	# Compute log density using NumPy	
-		# Convert back to a PyTorch tensor on the correct device
-		log_prob = torch.tensor(log_density, device ='cpu', dtype=torch.float)
+	# # Compute log density using NumPy	
+	# 	# Convert back to a PyTorch tensor on the correct device
+	# 	log_prob = torch.tensor(log_density, device ='cpu', dtype=torch.float)
 		
-		# Handle very low probability samples using a mask
-		log_prob = torch.where(log_prob < -1e4, torch.tensor(float("-inf"), device=self.device), log_prob)
+	# 	# Handle very low probability samples using a mask
+	# 	log_prob = torch.where(log_prob < -1e4, torch.tensor(float("-inf"), device=self.device), log_prob)
 		
-		return log_prob.requires_grad_(True)
+	# 	return log_prob.requires_grad_(True)
 	
 
 
@@ -197,7 +197,7 @@ class DPP(nn.Module, TargetDistribution):
 		true_expectation = self.true_expectation.to(expectation.device)
 		bias_normed = (expectation - true_expectation) / true_expectation
 		return bias_normed
-
+	
 	def performance_metrics(self, samples: torch.Tensor, log_w: torch.Tensor,
 							log_q_fn: Optional[LogProbFunc] = None,
 							batch_size: Optional[int] = None) -> Dict:
