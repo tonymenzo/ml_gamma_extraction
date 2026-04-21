@@ -1,0 +1,15 @@
+{
+  "num_trials": 25,
+  "val_fraction": 0.1,
+  "batch_size": 50000,
+  "lr": 0.009,
+  "num_epochs": 450,
+  "patience_lr": 5,
+  "lr_factor": 0.5,
+  "patience_stop": 30,
+  "num_flows": 12,
+  "hidden_features": 128,
+  "num_bins": 24,
+  "seed_offset": 0,
+  "timestamp": "2026-03-14T00:13:13.375890"
+}

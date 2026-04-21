@@ -1,0 +1,35 @@
+{
+  "description": "h-network ensemble comparison with 3-flow method",
+  "date": "2026-04-07",
+  "sdp_convention": "idx=(2,3,1), symmetric pipi SDP",
+  "flavor_flows": "flavor_SDP_sym_2e6/trial_seed{i}.pth (25 available, 12-layer NSF, 128 hidden, 24 bins)",
+  "cp_data": "data/{even,odd}_symmetric_datasets_sdp/dataset_{i:03d}.npy (2M events each per seed)",
+  "bpm_data": "BpBm_samples_rB0.1.npz (100k per charge, rB=0.1, deltaB=130, gamma=70)",
+  "baseline": "fit_results_symmetric.npz (25 fits from 3-flow method)",
+  "h_network_architecture": {
+    "type": "SIREN",
+    "hidden": 256,
+    "layers": 5,
+    "omega_0": 15.0,
+    "output": "tanh (guarantees [-1,+1])",
+    "parameters": 198401
+  },
+  "training": {
+    "lr": 1e-4,
+    "batch_size": 20000,
+    "patience": 30,
+    "max_epochs": 100,
+    "optimizer": "Adam",
+    "scheduler": "ReduceLROnPlateau(factor=0.5, patience=15)",
+    "cp_events_per_tag": "2M (full dataset)",
+    "mc_grid": 250000,
+    "train_val_split": 0.9
+  },
+  "gamma_fit": {
+    "method": "unbinned maximum likelihood (iminuit MIGRAD+HESSE)",
+    "free_params": ["rB", "deltaB", "gamma"],
+    "mc_normalization": "1M uniform SDP points per charge"
+  },
+  "results_file": "ensemble_comparison_results.json",
+  "model_weights": "h_ensemble_seed{i}.pth"
+}
