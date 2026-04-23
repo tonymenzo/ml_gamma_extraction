@@ -24,6 +24,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--three-flow-results', type=str,
                     default=os.path.join(RESULTS_DIR, 'fit_results_4_15.npz'),
                     help='Path to 3-flow fit results .npz')
+parser.add_argument('--h-results', type=str,
+                    default=os.path.join(RESULTS_DIR, 'ensemble_comparison_symmetric_results_v2.json'),
+                    help='Path to h-network ensemble results .json')
 args = parser.parse_args()
 
 plt.rcParams.update({
@@ -40,7 +43,8 @@ plt.rcParams.update({
 true_rB, true_delta, true_gamma = 0.1, 130.0, 70.0
 
 am = np.load(os.path.join(RESULTS_DIR, 'amplitude_model_fit.npz'))
-h_results = json.load(open(os.path.join(RESULTS_DIR, 'ensemble_comparison_symmetric_results_v2.json')))
+h_results = json.load(open(args.h_results))
+N_h = len(h_results)
 d = np.load(args.three_flow_results)
 
 seeds = [r['seed'] for r in h_results]
@@ -108,7 +112,7 @@ def make_corner(tf_rB, tf_delta, tf_gamma, tf_rB_e, tf_delta_e, tf_gamma_e,
     legend_handles = [
         Line2D([0],[0], marker='D', color='#2ca02c', markersize=7, ls='none', label='Amplitude model'),
         Line2D([0],[0], marker='o', color='#1f77b4', markersize=5, ls='none', alpha=0.5, label=f'3-flow ($N={n_tf_label}$)'),
-        Line2D([0],[0], marker='s', color='#ff7f0e', markersize=5, ls='none', alpha=0.6, label=r'$h$-network ($N=5$)'),
+        Line2D([0],[0], marker='s', color='#ff7f0e', markersize=5, ls='none', alpha=0.6, label=rf'$h$-network ($N={N_h}$)'),
         Line2D([0],[0], marker='P', color='#1f77b4', markersize=8, ls='none', markeredgecolor='white', markeredgewidth=0.8, label=r'3-flow mean $\pm\,\sigma_{\rm tot}$'),
         Line2D([0],[0], marker='P', color='#ff7f0e', markersize=8, ls='none', markeredgecolor='white', markeredgewidth=0.8, label=r'$h$-net mean $\pm\,\sigma_{\rm tot}$'),
         Line2D([0],[0], color='k', ls='--', lw=0.7, alpha=0.4, label='Benchmark'),
@@ -139,7 +143,7 @@ tf_gamma_e_m = np.array([d['errors_gamma'][s] for s in seeds])
 
 make_corner(tf_rB_m, tf_delta_m, tf_gamma_m,
             tf_rB_e_m, tf_delta_e_m, tf_gamma_e_m,
-            n_tf_label=5,
+            n_tf_label=N_h,
             save_path=os.path.join(FIGURES_DIR, 'corner_comparison_matched.pdf'),
             rB_ylim=(0.096, 0.106))
 
