@@ -142,6 +142,16 @@ def precompute_flavor_terms(points_sdp, flow):
 H_HIDDEN   = args.hidden or (320 if args.symmetric else 256)
 H_LAYERS   = args.layers or (6 if args.symmetric else 5)
 H_OMEGA    = args.omega or 15.0
+
+def load_hnet(path):
+    """Load a trained h-network, auto-detecting architecture from checkpoint."""
+    sd = torch.load(path, map_location=device, weights_only=False)
+    n_hidden = len([k for k in sd.keys() if 'layers_list' in k and 'weight' in k])
+    hidden = sd['net.layers_list.0.linear.weight'].shape[0]
+    h = SymmetricSIREN(hidden=hidden, layers=n_hidden+1, omega_0=H_OMEGA).to(device)
+    h.load_state_dict(sd)
+    h.eval()
+    return h
 LR         = 1e-4
 BATCH_SIZE = 20_000
 PATIENCE   = 30
@@ -230,10 +240,11 @@ def run_gamma_fit(h_net, flow, dataM_sdp, dataP_sdp, mcM_sdp, mcP_sdp):
                           + 2*rB*(np.cos(thM)*tM['C'] - np.sin(thM)*tM['S']))
         pBp = _finite_pos(tP['pF'] + rB**2*tP['pFsw']
                           + 2*rB*(np.cos(thP)*tP['C'] + np.sin(thP)*tP['S']))
-        mBm = _finite_pos(mM['J']*(mM['pFsw'] + rB**2*mM['pF']
-                          + 2*rB*(np.cos(thM)*mM['C'] - np.sin(thM)*mM['S'])))
-        mBp = _finite_pos(mP['J']*(mP['pF'] + rB**2*mP['pFsw']
-                          + 2*rB*(np.cos(thP)*mP['C'] + np.sin(thP)*mP['S'])))
+        # MC normalization in SDP measure (no Jacobian — K already includes it)
+        mBm = _finite_pos(mM['pFsw'] + rB**2*mM['pF']
+                          + 2*rB*(np.cos(thM)*mM['C'] - np.sin(thM)*mM['S']))
+        mBp = _finite_pos(mP['pF'] + rB**2*mP['pFsw']
+                          + 2*rB*(np.cos(thP)*mP['C'] + np.sin(thP)*mP['S']))
         return (-np.log(pBm).sum() + N_M*np.log(mBm.mean())
                 -np.log(pBp).sum() + N_P*np.log(mBp.mean()))
 
