@@ -117,25 +117,10 @@ def make_corner(tf_rB, tf_delta, tf_gamma, tf_rB_e, tf_delta_e, tf_gamma_e,
         Line2D([0],[0], marker='P', color='#ff7f0e', markersize=8, ls='none', markeredgecolor='white', markeredgewidth=0.8, label=r'$h$-net mean $\pm\,\sigma_{\rm tot}$'),
         Line2D([0],[0], color='k', ls='--', lw=0.7, alpha=0.4, label='Benchmark'),
     ]
-    axes[0,1].legend(handles=legend_handles, loc='upper center', fontsize=11,
+    axes[0,1].legend(handles=legend_handles, loc='center', fontsize=12,
                      frameon=True, fancybox=False, edgecolor='0.8')
 
-    # Add summary text below legend
-    # pairs order: gamma, delta, rB
-    h_means = [h_gamma.mean(), h_delta.mean(), h_rB.mean()]
-    tf_means = [tf_gamma.mean(), tf_delta.mean(), tf_rB.mean()]
-    summary_text = (
-        f'Averages:\n'
-        f'  3-flow: $r_B$={tf_means[2]:.4f}, '
-        f'$\\delta_B$={tf_means[1]:.1f}$^\\circ$, '
-        f'$\\gamma$={tf_means[0]:.1f}$^\\circ$\n'
-        f'  $h$-net: $r_B$={h_means[2]:.4f}, '
-        f'$\\delta_B$={h_means[1]:.1f}$^\\circ$, '
-        f'$\\gamma$={h_means[0]:.1f}$^\\circ$'
-    )
-    axes[0,1].text(0.5, 0.15, summary_text, transform=axes[0,1].transAxes,
-                   fontsize=10, ha='center', va='center',
-                   bbox=dict(boxstyle='round,pad=0.4', facecolor='wheat', alpha=0.3))
+
 
     axes[0,1].set_visible(True); axes[0,1].axis('off')
 
