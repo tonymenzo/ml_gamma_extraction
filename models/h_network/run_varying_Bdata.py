@@ -196,11 +196,55 @@ for bdata_idx in bdata_with_events:
 
 print(f"\n\nSaved {len(all_results)} per-seed results to {results_path}")
 
-# Print summary
-import pandas as pd if False else None  # avoid import
+# ----- Aggregate per-realization, then across realizations -----
 bdata_indices = sorted(set(r['bdata_idx'] for r in all_results))
-print(f"\nSummary ({len(bdata_indices)} B± datasets, {len(seeds_to_use)} h-networks):")
+
+realiz = {}
 for bi in bdata_indices:
-    seeds_done = [r for r in all_results if r['bdata_idx'] == bi]
-    gammas = [r['gamma'] for r in seeds_done]
-    print(f"  Bdata_{bi:03d}: {len(seeds_done)} seeds, γ mean={np.mean(gammas):.2f} ± {np.std(gammas):.2f}")
+    seeds_done = [r for r in all_results if r['bdata_idx'] == bi and r.get('valid', True)]
+    if not seeds_done:
+        continue
+    realiz[bi] = {
+        'n_seeds': len(seeds_done),
+        'rB_mean':       np.mean([r['rB']        for r in seeds_done]),
+        'rB_meanerr':    np.mean([r['rB_err']    for r in seeds_done]),
+        'delta_mean':    np.mean([r['delta']     for r in seeds_done]),
+        'delta_meanerr': np.mean([r['delta_err'] for r in seeds_done]),
+        'gamma_mean':    np.mean([r['gamma']     for r in seeds_done]),
+        'gamma_meanerr': np.mean([r['gamma_err'] for r in seeds_done]),
+    }
+
+print(f"\nPer-realization (mean over seeds  ±  ⟨HESSE⟩ over seeds):")
+for bi in bdata_indices:
+    r = realiz.get(bi)
+    if r is None: continue
+    print(f"  Bdata_{bi:03d}: {r['n_seeds']:2d} seeds  "
+          f"rB={r['rB_mean']:.4f}±{r['rB_meanerr']:.4f}  "
+          f"δ={r['delta_mean']:6.2f}±{r['delta_meanerr']:.2f}  "
+          f"γ={r['gamma_mean']:6.2f}±{r['gamma_meanerr']:.2f}")
+
+# Across-realization σ_total = √(realization-spread² + ⟨per-realization fit-error⟩²)
+print(f"\nAcross {len(realiz)} realizations  (σ_total = √(σ_realization² + ⟨fit_err⟩²)):")
+for name, fmt in [('rB', '.4f'), ('delta', '.3f'), ('gamma', '.3f')]:
+    means = np.array([realiz[bi][f'{name}_mean']    for bi in realiz])
+    errs  = np.array([realiz[bi][f'{name}_meanerr'] for bi in realiz])
+    spread, mean_err = means.std(ddof=0), errs.mean()
+    sig_tot = np.sqrt(spread**2 + mean_err**2)
+    print(f"  {name:>5s}: mean={means.mean():{fmt}}  "
+          f"σ_realization={spread:{fmt}}  ⟨fit_err⟩={mean_err:{fmt}}  "
+          f"σ_total={sig_tot:{fmt}}")
+
+# ----- Verification: cross-check 2 realizations vs varying_Bdata_hnet.json -----
+ref_path = os.path.join(SCRIPT_DIR, 'results', 'varying_Bdata_hnet.json')
+if os.path.exists(ref_path):
+    ref = {r['bdata_idx']: r for r in json.load(open(ref_path))}
+    common = sorted(set(realiz) & set(ref.keys()))
+    if len(common) >= 2:
+        print(f"\nVerification vs varying_Bdata_hnet.json (h_mean_*  on first 2 common):")
+        for bi in common[:2]:
+            r_new, r_ref = realiz[bi], ref[bi]
+            print(f"  Bdata_{bi:03d}:")
+            for name in ['rB', 'delta', 'gamma']:
+                new_v = r_new[f'{name}_mean']
+                ref_v = r_ref[f'h_mean_{name}']
+                print(f"    {name:>5s}: new={new_v:.4f}  ref={ref_v:.4f}  Δ={new_v-ref_v:+.4f}")

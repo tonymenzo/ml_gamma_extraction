@@ -21,10 +21,10 @@ plt.rcParams.update({
     'font.family': 'serif',
     'font.serif': ['Computer Modern Roman'],
     'text.latex.preamble': r'\usepackage{amsmath}',
-    'axes.labelsize': 16,
+    'axes.labelsize': 18,
     'axes.titlesize': 16,
-    'xtick.labelsize': 12,
-    'ytick.labelsize': 12,
+    'xtick.labelsize': 16,
+    'ytick.labelsize': 16,
     'figure.dpi': 300,
 })
 
@@ -32,7 +32,7 @@ results = json.load(open(os.path.join(RESULTS_DIR, 'varying_Bdata_hnet.json')))
 true_rB, true_delta, true_gamma = 0.1, 130.0, 70.0
 
 x = np.arange(len(results))
-labels = [f'{r["bdata_idx"]}' for r in results]
+labels = [f'{i+1}' for i in range(len(results))]
 
 exact_rB = np.array([r['exact_rB'] for r in results])
 exact_delta = np.array([r['exact_delta'] for r in results])
@@ -66,7 +66,7 @@ params = [
     (axes[1], r'$\delta_B\;[^\circ]$', true_delta, exact_delta, flow_delta, flow_delta_std_clip, h_delta, h_delta_std,
      (125, 135)),
     (axes[2], r'$\gamma\;[^\circ]$', true_gamma, exact_gamma, flow_gamma, flow_gamma_std_clip, h_gamma, h_gamma_std,
-     (64, 76)),
+     (64, 77)),
 ]
 
 param_fmts = [
@@ -94,7 +94,7 @@ for idx, (ax, ylabel, truth, exact, fl_mean, fl_std, h_mean, h_std, ylim) in enu
     ax.set_ylim(*ylim)
     ax.grid(True, alpha=0.15)
     if ax == axes[2]:
-        ax.legend(fontsize=10, loc='upper center')
+        ax.legend(fontsize=13, loc='upper center')
 
     # Per-panel averages text box with std/sqrt(N) uncertainty
     N_real = len(exact)
@@ -106,13 +106,13 @@ for idx, (ax, ylabel, truth, exact, fl_mean, fl_std, h_mean, h_std, ylim) in enu
         def vpm(arr): return f'{arr.mean():.1f} $\\pm$ {arr.std()/np.sqrt(N_real):.1f}$^\\circ$'
     avg_box = (
         f'Avg {ylabel}:  '
-        f'Amp.={vpm(exact)},  '
-        f'3-flow={vpm(fl_mean)},  '
-        f'$h$-net={vpm(h_mean)}'
+        f'Amp.: {vpm(exact)},  '
+        f'3-flow: {vpm(fl_mean)},  '
+        f'$h$-net: {vpm(h_mean)}'
     )
-    ax.text(0.5, 0.03, avg_box, transform=ax.transAxes,
-            fontsize=11, ha='center', va='bottom',
-            bbox=dict(boxstyle='round,pad=0.3', facecolor='white', edgecolor='0.7', alpha=0.9))
+    ax.text(0.5, 0.06, avg_box, transform=ax.transAxes,
+            fontsize=17, ha='center', va='bottom',
+            bbox=dict(boxstyle='round,pad=0.4', facecolor='white', edgecolor='0.7', alpha=0.9))
 
 axes[2].set_xlabel(r'$B^\pm$ pseudo-data realization')
 axes[2].set_xticks(x)
